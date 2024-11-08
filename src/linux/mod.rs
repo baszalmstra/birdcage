@@ -1,6 +1,5 @@
 //! Linux sandboxing.
 
-use fs_err as fs;
 use std::collections::HashMap;
 use std::ffi::CString;
 use std::io::{Error as IoError, ErrorKind as IoErrorKind};
