@@ -1,12 +1,13 @@
 //! Linux sandboxing.
 
+use fs_err as fs;
 use std::collections::HashMap;
 use std::ffi::CString;
 use std::io::{Error as IoError, ErrorKind as IoErrorKind};
 use std::os::fd::OwnedFd;
 use std::os::unix::ffi::OsStrExt;
 use std::path::{Component, Path, PathBuf};
-use std::{env, fs, io, ptr};
+use std::{env, io, ptr};
 
 use rustix::pipe::pipe;
 use rustix::process::{Gid, Pid, Uid, WaitOptions};
@@ -47,11 +48,7 @@ impl Sandbox for LinuxSandbox {
     }
 
     fn spawn(self, sandboxee: Command) -> Result<Child> {
-        // Ensure calling process is not multi-threaded.
-        assert!(
-            thread_count().unwrap_or(0) == 1,
-            "`Sandbox::spawn` must be called from a single-threaded process"
-        );
+        // TODO: Ensure that multi-threaded calls are actually fine
 
         // Remove environment variables.
         if !self.full_env {
@@ -219,7 +216,9 @@ fn sandbox_init_inner(mut init_arg: ProcessInitArg) -> io::Result<libc::c_int> {
     std_command.stdin(std::process::Stdio::inherit());
     std_command.stdout(std::process::Stdio::inherit());
     std_command.stderr(std::process::Stdio::inherit());
+    println!("Before Spawning: {:?}", std_command);
     let child = std_command.spawn()?;
+    println!("After Spawning");
 
     // Reap zombie children.
     let child_pid = Pid::from_raw(child.id() as i32);
@@ -420,25 +419,4 @@ fn normalize_path(path: &Path) -> PathBuf {
 /// Check if a path contains any symlinks.
 fn path_has_symlinks(path: &Path) -> bool {
     path.ancestors().any(|path| path.read_link().is_ok())
-}
-
-/// Get the number of threads used by the current process.
-fn thread_count() -> io::Result<usize> {
-    // Read process status from procfs.
-    let status = fs::read_to_string("/proc/self/status")?;
-
-    // Parse procfs output.
-    let (_, threads_start) = status.split_once("Threads:").ok_or_else(|| {
-        io::Error::new(io::ErrorKind::InvalidData, "/proc/self/status missing \"Threads:\"")
-    })?;
-    let thread_count = threads_start.split_whitespace().next().ok_or_else(|| {
-        io::Error::new(io::ErrorKind::InvalidData, "/proc/self/status output malformed")
-    })?;
-
-    // Convert to number.
-    let thread_count = thread_count
-        .parse::<usize>()
-        .map_err(|err| io::Error::new(io::ErrorKind::InvalidData, err))?;
-
-    Ok(thread_count)
 }
