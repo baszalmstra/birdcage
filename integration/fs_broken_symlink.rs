@@ -1,4 +1,5 @@
-use std::fs::{self, File};
+use fs_err as fs;
+use fs_err::File;
 use std::os::unix::fs as unixfs;
 use std::path::PathBuf;
 

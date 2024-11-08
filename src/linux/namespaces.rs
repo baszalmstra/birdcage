@@ -1,8 +1,9 @@
 //! Linux namespaces.
 
+use fs_err as fs;
+use fs_err::File;
 use std::cmp::Ordering;
 use std::ffi::{CStr, CString};
-use std::fs::{self, File};
 use std::io::Error as IoError;
 use std::os::unix::ffi::OsStrExt;
 use std::os::unix::fs as unixfs;

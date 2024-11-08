@@ -33,3 +33,4 @@ tempfile = "3.3.0"
 
 [dependencies]
 bitflags = "2.4.0"
+fs-err = "3.0.0"

@@ -1,5 +1,5 @@
+use fs_err as fs;
 use std::path::PathBuf;
-use std::fs;
 use std::process::Command;
 
 use birdcage::{Birdcage, Exception, Sandbox};

@@ -1,4 +1,4 @@
-use std::fs::{self, File};
+use fs_err::{self as fs, File};
 use std::path::PathBuf;
 
 use birdcage::{Birdcage, Exception, Sandbox};
